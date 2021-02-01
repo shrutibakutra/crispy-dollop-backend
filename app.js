@@ -42,7 +42,7 @@ app.listen(3001, () => {
 });
 app.use(cors())
     // put the HTML file containing your form in a directory named "public" (relative to where this script is located)
-app.get("/", express.static(path.join(__dirname, "./public")));
+app.get("/", express.static(path.join(__dirname, "./storage/app/public")));
 
 app.use('/', company)
 app.use('/', employee)

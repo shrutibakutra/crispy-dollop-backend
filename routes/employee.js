@@ -8,6 +8,9 @@ router.post('/create/employee',employee_controller.create_employee)
 router.put('/update/employee/:employeeId', employee_controller.update_employee);
 router.delete('/delete/employee/:employeeId', employee_controller.delete_employee);
 router.get('/getAll/employee/', employee_controller.findAll_employee);
+router.post('/register/User',employee_controller.register)
+router.get('/login/User',employee_controller.login)
+
 
 
 module.exports = router;

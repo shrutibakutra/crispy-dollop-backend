@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Employee = require('../models/employee.model.js')
-const Company = require('../models/company.model')
-
+const User = require('../models/users.model')
+const bcrypt = require('bcrypt');
 
 // Create and Save a new employee
 exports.create_employee = (req, res) => {
@@ -15,7 +15,7 @@ exports.create_employee = (req, res) => {
 
 
     // Create a employee
-    Employee.create(employee, function(error, post) {
+    Employee.create(employee, function (error, post) {
         if (error) {
             res.status(400).send(error);
             return error;
@@ -25,7 +25,7 @@ exports.create_employee = (req, res) => {
 };
 
 // Retrieve and return all employees from the database.
-exports.findAll_employee = async(req, res) => {
+exports.findAll_employee = async (req, res) => {
     let emoloyee_data = await Employee.aggregate([{
         $lookup: {
             from: "companies",
@@ -33,7 +33,7 @@ exports.findAll_employee = async(req, res) => {
             foreignField: "_id",
             as: "companyDetail"
         }
-    }, ])
+    },])
     res.json(emoloyee_data);
 };
 
@@ -50,12 +50,12 @@ exports.findAll_employee = async(req, res) => {
 // };
 
 // Update a employee identified by the employeeId in the request
-exports.update_employee = async(req, res) => {
+exports.update_employee = async (req, res) => {
     let data = await Employee.findByIdAndUpdate({ _id: req.params.employeeId },
         req.body
     )
     let newData = await Employee.findById(mongoose.Types.ObjectId(req.params.employeeId))
-        // console.log('new data: ', newData)
+    // console.log('new data: ', newData)
     res.json(newData)
 };
 
@@ -81,3 +81,101 @@ exports.delete_employee = (req, res) => {
         });
 
 };
+
+exports.register = async (req, res) => {
+    let password = req.body.password;
+
+    var salt = bcrypt.genSaltSync(10);
+    // Validate request
+    // if (!user) {
+    //     return res.status(400).send({
+    //         message: "employee content can not be empty"
+    //     });
+    // }
+
+    // Create a employee
+    let encryptedPassword = await bcrypt.hash(password, salt)
+    let users = {
+        "email": req.body.email,
+        "password": encryptedPassword
+    }
+    User.create(users, function (error, post) {
+        if (error) {
+            res.status(400).send(error);
+            return error;
+        }
+        res.json(post);
+    });
+}
+
+// exports.login = async (req, res, next) => {
+//     let user = req.body
+//     let email = req.params.email
+//     let password = req.params.password
+
+//     User.find(email)
+//         .then(async (user) => {
+//             if (!user[0]) {
+//                 res.status(404).send({});
+//             } 
+//             else {
+//                 const comparision = await bcrypt.compare(password, user[0].password);
+//                 console.log("comparision::::",comparision)
+//                 if (comparision) {
+//                     console.log("success")
+//                     res.send({
+//                         "code": 200,
+//                         "success": "login sucessfull"
+//                     })
+//                 }
+//                 else {
+//                     console.log("fail")
+//                     res.send({
+
+//                         "code": 204,
+//                         "success": "Email and password does not match"
+//                     })
+//                 }
+//             }
+//         }
+//         )
+// }
+exports.login = async (req, res, next) => {
+    let user = req.body
+    let email = req.body.email
+    let password = req.body.password
+
+    User.find(email,async function (error, results, fields) {
+        if (error) {
+            res.send({
+                "code":400,
+                "failed":"error ocurred"
+              })
+        }else{
+            if(results.length >0){
+                const comparision = await bcrypt.compare(password, user[0].password);
+                if (comparision) {
+                    console.log("success")
+                    res.send({
+                        "code": 200,
+                        "success": "login sucessfull"
+                    })
+                }
+                else {
+                    console.log("fail")
+                    res.send({
+
+                        "code": 204,
+                        "success": "Email and password does not match"
+                    })
+                }
+            }
+            else{
+                res.send({
+                  "code":206,
+                  "success":"Email does not exits"
+                    });
+              }
+            }
+        })
+    }
