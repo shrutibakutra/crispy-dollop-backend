@@ -108,67 +108,36 @@ exports.register = async (req, res) => {
     });
 }
 
-// exports.login = async (req, res, next) => {
-//     let user = req.body
-//     let email = req.params.email
-//     let password = req.params.password
 
-//     User.find(email)
-//         .then(async (user) => {
-//             if (!user[0]) {
-//                 res.status(404).send({});
-//             } 
-//             else {
-//                 const comparision = await bcrypt.compare(password, user[0].password);
-//                 console.log("comparision::::",comparision)
-//                 if (comparision) {
-//                     console.log("success")
-//                     res.send({
-//                         "code": 200,
-//                         "success": "login sucessfull"
-//                     })
-//                 }
-//                 else {
-//                     console.log("fail")
-//                     res.send({
-
-//                         "code": 204,
-//                         "success": "Email and password does not match"
-//                     })
-//                 }
-//             }
-//         }
-//         )
-// }
 exports.login = async (req, res, next) => {
-    let user = req.body
     let email = req.body.email
     let password = req.body.password
 
-    User.find(email,async function (error, results, fields) {
+
+    User.findOne({ 'email': email },async function (error, results, fields) {
         if (error) {
             res.send({
                 "code":400,
                 "failed":"error ocurred"
               })
         }else{
-            if(results.length >0){
-                const comparision = await bcrypt.compare(password, user[0].password);
-                if (comparision) {
-                    console.log("success")
-                    res.send({
-                        "code": 200,
-                        "success": "login sucessfull"
-                    })
-                }
-                else {
-                    console.log("fail")
-                    res.send({
-
-                        "code": 204,
-                        "success": "Email and password does not match"
-                    })
-                }
+            if(results.length > 0){
+                await bcrypt.compare(password, results.password, function(err, result) {
+                    if(result == true){
+                        res.send({
+                            "code": 200,
+                            "success": "login sucessfull"
+                        })  
+                    }
+                    else {
+                        console.log("fail")
+                        res.send({
+                            "code": 204,
+                            "success": "Email and password does not match"
+                        })
+                    }
+                });
+        
             }
             else{
                 res.send({
